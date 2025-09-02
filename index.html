@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snap2Prompt</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary': '#4f46e5',
+                        'primary-dark': '#3730a3',
+                    }
+                }
+            },
+            darkMode: 'class'
+        }
+    </script>
+    <style>
+        .glass {
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            background-color: rgba(255, 255, 255, 0.75);
+            border: 1px solid rgba(209, 213, 219, 0.3);
+        }
+        
+        .dark .glass {
+            background-color: rgba(17, 24, 39, 0.75);
+            border: 1px solid rgba(75, 85, 99, 0.3);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .drag-area {
+            transition: all 0.3s ease;
+        }
+        
+        .drag-area.drag-over {
+            border-color: #4f46e5;
+            background-color: rgba(79, 70, 229, 0.1);
+        }
+        
+        .checkbox-item {
+            transition: all 0.2s ease;
+        }
+        
+        .checkbox-item:hover {
+            background-color: rgba(79, 70, 229, 0.05);
+        }
+        
+        .dark .checkbox-item:hover {
+            background-color: rgba(79, 70, 229, 0.1);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="font-inter bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
+    <!-- Header -->
+    <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
+        <div class="px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-4">
+                <div class="w-8 h-8 bg-gradient-to-r from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clip-rule="evenodd"></path>
+                    </svg>
+                </div>
+                <h1 class="text-xl font-semibold text-gray-900 dark:text-white">AI Prompt Generator</h1>
+            </div>
+            
+            <!-- Dark Mode Toggle -->
+            <button id="darkModeToggle" class="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-200">
+                <svg id="sunIcon" class="w-5 h-5 text-gray-600 dark:text-gray-300 hidden dark:block" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd"></path>
+                </svg>
+                <svg id="moonIcon" class="w-5 h-5 text-gray-600 dark:text-gray-300 block dark:hidden" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"></path>
+                </svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside id="sidebar" class="w-80 bg-white dark:bg-gray-800 shadow-lg border-r border-gray-200 dark:border-gray-700 transition-all duration-300">
+            <div class="p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">Prompt Options</h2>
+                
+                <!-- API Key Input -->
+                <div class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                    <label for="apiKey" class="block text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                        Google AI Studio API Key
+                    </label>
+                    <div class="space-y-2">
+                        <input 
+                            type="password" 
+                            id="apiKey" 
+                            placeholder="Enter your API key..."
+                            class="w-full p-2 text-sm border border-yellow-300 dark:border-yellow-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
+                        >
+                        <div class="flex space-x-2">
+                            <button id="addApiKey" class="flex-1 bg-green-500 hover:bg-green-600 text-white text-xs py-2 px-3 rounded-md transition-colors duration-200">
+                                <span class="flex items-center justify-center">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Save Key
+                                </span>
+                            </button>
+                            <button id="manageApiKeys" class="flex-1 bg-blue-500 hover:bg-blue-600 text-white text-xs py-2 px-3 rounded-md transition-colors duration-200">
+                                <span class="flex items-center justify-center">
+                                    <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fill-rule="evenodd" d="M11.49 3.17c-.38-1.56-2.6-1.56-2.98 0a1.532 1.532 0 01-2.286.948c-1.372-.836-2.942.734-2.106 2.106.54.886.061 2.042-.947 2.287-1.561.379-1.561 2.6 0 2.978a1.532 1.532 0 01.947 2.287c-.836 1.372.734 2.942 2.106 2.106a1.532 1.532 0 012.287.947c.379 1.561 2.6 1.561 2.978 0a1.533 1.533 0 012.287-.947c1.372.836 2.942-.734 2.106-2.106a1.533 1.533 0 01.947-2.287c1.561-.379 1.561-2.6 0-2.978a1.532 1.532 0 01-.947-2.287c.836-1.372-.734-2.942-2.106-2.106a1.532 1.532 0 01-2.287-.947zM10 13a3 3 0 100-6 3 3 0 000 6z" clip-rule="evenodd"></path>
+                                    </svg>
+                                    Manage
+                                </span>
+                            </button>
+                        </div>
+                    </div>
+                    <p class="text-xs text-yellow-700 dark:text-yellow-300 mt-2">
+                        Get your key from <a href="https://aistudio.google.com/app/apikey" target="_blank" class="underline">Google AI Studio</a>
+                    </p>
+                </div>
+
+                <!-- API Key Manager -->
+                <div id="apiKeyManager" class="hidden mb-6 p-4 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Saved API Keys</h3>
+                        <button onclick="promptGenerator.toggleApiKeyManager()" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                            </svg>
+                        </button>
+                    </div>
+                    
+                    <!-- Import/Export buttons -->
+                    <div class="flex space-x-2 mb-3">
+                        <button id="exportApiKeys" class="flex-1 bg-purple-500 hover:bg-purple-600 text-white text-xs py-2 px-3 rounded-md transition-colors duration-200">
+                            <span class="flex items-center justify-center">
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                                Export
+                            </span>
+                        </button>
+                        <button id="importApiKeys" class="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-xs py-2 px-3 rounded-md transition-colors duration-200">
+                            <span class="flex items-center justify-center">
+                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM6.293 6.707a1 1 0 010-1.414l3-3a1 1 0 011.414 0l3 3a1 1 0 01-1.414 1.414L11 5.414V13a1 1 0 11-2 0V5.414L7.707 6.707a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                                Import
+                            </span>
+                        </button>
+                    </div>
+                    
+                    <div id="apiKeyList" class="space-y-2 max-h-60 overflow-y-auto">
+                        <!-- API keys will be rendered here -->
+                    </div>
+                </div>
+                
+                <!-- Checkbox Options -->
+                <div class="space-y-3 mb-6">
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="subject-face">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Subject Face / Identity</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="hairstyle">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Hairstyle & Color</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="clothing">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Dress / Clothing</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="accessories">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Accessories (hat, watch, jewelry, shoes)</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="skin-tone">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Skin Tone & Body Shape</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="pose">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Pose / Gesture</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="lighting">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Lighting</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="background">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Background</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="colors">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Colors</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="objects">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Objects / Props</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="environment">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Environment</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="mood">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Mood / Emotion</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="art-style">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Art Style</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="camera-angle">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Camera Angle</span>
+                        </label>
+                    </div>
+                    
+                    <div class="checkbox-item p-3 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <label class="flex items-center cursor-pointer">
+                            <input type="checkbox" class="form-checkbox h-4 w-4 text-primary rounded focus:ring-primary border-gray-300 dark:border-gray-600" value="quality">
+                            <span class="ml-3 text-sm text-gray-700 dark:text-gray-300">Resolution / Quality</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- Action Buttons -->
+                <div class="space-y-3">
+                    <button id="generatePrompt" class="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary-dark hover:to-purple-700 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path>
+                            </svg>
+                            Generate Prompt
+                        </span>
+                    </button>
+                    
+                    <button id="clearBtn" class="w-full bg-gray-500 hover:bg-gray-600 text-white font-medium py-3 px-4 rounded-lg transition-all duration-200">
+                        <span class="flex items-center justify-center">
+                            <svg class="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+                            </svg>
+                            Clear
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <div class="max-w-4xl mx-auto space-y-6">
+                <!-- Image Upload Area -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Image Upload (Optional)</h3>
+                    
+                    <div id="dropArea" class="drag-area border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center hover:border-primary transition-colors duration-200">
+                        <div id="uploadPrompt" class="space-y-4">
+                            <div class="w-16 h-16 mx-auto bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center">
+                                <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <p class="text-lg font-medium text-gray-900 dark:text-white">Drop your image here</p>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">or click to browse</p>
+                            </div>
+                            <input type="file" id="fileInput" accept="image/*" class="hidden">
+                        </div>
+                        
+                        <div id="imagePreview" class="hidden">
+                            <img id="previewImg" class="max-w-full max-h-64 mx-auto rounded-lg shadow-md">
+                            <button id="removeImage" class="mt-4 text-red-500 hover:text-red-700 font-medium">Remove Image</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Generated Prompt Display -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Generated Prompt</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Ultra-precise technical specifications with measurable details</p>
+                        </div>
+                        <button id="copyPrompt" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <span class="flex items-center">
+                                <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M8 3a1 1 0 011-1h2a1 1 0 110 2H9a1 1 0 01-1-1z"></path>
+                                    <path d="M6 3a2 2 0 00-2 2v11a2 2 0 002 2h8a2 2 0 002-2V5a2 2 0 00-2-2 3 3 0 01-3 3H9a3 3 0 01-3-3z"></path>
+                                </svg>
+                                Copy Prompt
+                            </span>
+                        </button>
+                    </div>
+                    
+                    <textarea 
+                        id="promptOutput" 
+                        placeholder="Ultra-precise technical prompt with measurable specifications will appear here..."
+                        class="w-full h-64 p-4 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                        readonly
+                    ></textarea>
+                    
+                    <div class="mt-4 flex items-center justify-between">
+                        <button id="editPrompt" class="text-primary hover:text-primary-dark font-medium disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            Edit Prompt
+                        </button>
+                        <div id="loadingIndicator" class="hidden flex items-center text-primary">
+                            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Generating prompt...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prompt History -->
+                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Prompts</h3>
+                    <div id="promptHistory" class="space-y-3">
+                        <p class="text-gray-500 dark:text-gray-400 text-center py-8">No recent prompts</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-8">
+        <div class="max-w-6xl mx-auto px-6 py-8">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <!-- Developer Info -->
+                <div class="text-center md:text-left">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">🧑‍💻 Developer</h3>
+                    <div class="space-y-1">
+                        <p class="text-gray-700 dark:text-gray-300">
+                            <span class="font-medium">👤 Fahim Al Sifat</span>
+                        </p>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">
+                            📍 Bangladesh | 💼 Student | Developer | Designer | AI Enthusiast
+                        </p>
+                        <p class="text-gray-600 dark:text-gray-400 text-sm">
+                            📧 <a href="mailto:kingsifatbd27@gmail.com" class="text-primary hover:text-primary-dark">kingsifatbd27@gmail.com</a>
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Social Links -->
+                <div class="flex flex-col items-center md:items-end">
+                    <h4 class="text-sm font-medium text-gray-900 dark:text-white mb-3">🔗 Connect with me</h4>
+                    <div class="flex flex-wrap justify-center gap-3">
+                        <a href="https://facebook.com/fahimalsifat" target="_blank" class="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm transition-colors duration-200">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                            </svg>
+                            <span>Facebook</span>
+                        </a>
+                        
+                        <a href="https://x.com/fahim_al_sifat" target="_blank" class="flex items-center space-x-1 text-gray-900 dark:text-white hover:text-gray-700 dark:hover:text-gray-300 text-sm transition-colors duration-200">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                            </svg>
+                            <span>Twitter</span>
+                        </a>
+                        
+                        <a href="https://instagram.com/fahim_alsifat" target="_blank" class="flex items-center space-x-1 text-pink-600 hover:text-pink-700 text-sm transition-colors duration-200">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12.017 0C5.396 0 .029 5.367.029 11.987c0 6.62 5.367 11.987 11.988 11.987c6.62 0 11.987-5.367 11.987-11.987C24.014 5.367 18.637.001 12.017.001zM8.449 16.988c-1.297 0-2.448-.49-3.148-1.188L4.91 16.043c-.297-.297-.297-.782 0-1.08c.297-.297.782-.297 1.08 0l.392.257c.445-.445 1.188-.742 2.067-.742c1.782 0 3.226 1.445 3.226 3.226S10.231 20.93 8.449 20.93c-1.782 0-3.226-1.445-3.226-3.226c0-.594.148-1.188.445-1.683l-.89-.89c-.297-.297-.297-.782 0-1.08c.297-.297.782-.297 1.08 0l.89.89c.495-.297 1.089-.445 1.683-.445c1.782 0 3.226 1.445 3.226 3.226S10.231 16.988 8.449 16.988z"/>
+                            </svg>
+                            <span>Instagram</span>
+                        </a>
+                        
+                        <a href="https://linkedin.com/in/fahimalsifat" target="_blank" class="flex items-center space-x-1 text-blue-700 hover:text-blue-800 text-sm transition-colors duration-200">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                            </svg>
+                            <span>LinkedIn</span>
+                        </a>
+                        
+                        <a href="https://github.com/fahim-alsifat" target="_blank" class="flex items-center space-x-1 text-gray-800 dark:text-gray-200 hover:text-gray-600 dark:hover:text-gray-400 text-sm transition-colors duration-200">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                            </svg>
+                            <span>GitHub</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Copyright -->
+            <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-center">
+                <p class="text-gray-600 dark:text-gray-400 text-sm">
+                    © 2025 Snap2Prompt. Developed with ❤️ by 
+                    <span class="font-medium text-primary">Fahim Al Sifat</span>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="hidden fixed bottom-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 fade-in">
+        <span id="toastMessage">Prompt copied to clipboard!</span>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

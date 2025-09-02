@@ -1,0 +1,40 @@
+{
+  "name": "Snap2Prompt",
+  "version": "1.0.0",
+  "description": "A modern web application that integrates with Google AI Studio Flash 2.0 API to generate structured prompts for image generation.",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "dev": "live-server --port=8080",
+    "build": "echo 'No build process required for static site'"
+  },
+  "keywords": [
+    "ai",
+    "prompt-generator",
+    "google-ai-studio",
+    "image-generation",
+    "web-app",
+    "javascript",
+    "tailwind-css"
+  ],
+  "author": {
+    "name": "Fahim Al Sifat",
+    "email": "kingsifatbd27@gmail.com",
+    "url": "https://github.com/fahim-alsifat"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "tailwindcss": "^3.3.0"
+  },
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/ai-prompt-generator.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/ai-prompt-generator/issues"
+  },
+  "homepage": "https://yourusername.github.io/ai-prompt-generator"
+}
